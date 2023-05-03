@@ -113,10 +113,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data-dir-path", type=str, help="Path to input data dir", required=True
     )
-    # parser.add_argument('--current-day', type=str, help='Current day for training model', required=True)
-    # parser.add_argument('--output-dir-path', type=str, help='Path to output dumped metric results', required=True)
-    # parser.add_argument('--pair-name', type=str, help='Name of traiding pair Ex. BTCUSDT', required=True)
-    # parser.add_argument('--model-path', type=str, help='Path to model', required=True)
     parser.add_argument("--exp-id", type=int, help="Id of experiment", required=True)
     args = parser.parse_args()
 
