@@ -20,7 +20,8 @@ def objective(trial, data, features:List[str], number_of_splits: int = 5, test_s
         'bagging_freq': trial.suggest_int('bagging_freq', 1, 10),
         'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
         'num_boost_round': trial.suggest_int('num_boost_round', 10, 1000),
-        'early_stopping_rounds': trial.suggest_int('early_stopping_rounds', 5, 50)
+        'early_stopping_rounds': trial.suggest_int('early_stopping_rounds', 5, 50),
+        'verbose': -1,
     }
 
 

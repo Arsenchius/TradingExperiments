@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 
 
-def read_data(path_to_data):
-    df = pd.read_csv(path_to_data, sep="|")
-    df = df.iloc[10:-10]
+def read_data(df):
+    # df = pd.read_csv(path_to_data, sep="|")
+    # df = df.iloc[10:-10]
     df = df.reset_index().drop("index", axis=1)
     df.adapter_time = pd.to_datetime(df.adapter_time)
     df.host_time = pd.to_datetime(df.host_time)
@@ -319,5 +319,5 @@ def feature_creation(df):
     #     "TrueVolume"
     # ].rolling(20).sum()
     # df["SampleY"] = (df["Mid20VWAP"].shift(-20) - df["TruePrice"]) / df["TruePrice"]
-
+    df = df.drop(["host_time", "sent_time"], axis=1)
     return df
