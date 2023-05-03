@@ -1,0 +1,113 @@
+import os
+import time
+# os.environ["OMP_NUM_THREADS"] = "4"
+# os.environ["OPENBLAS_NUM_THREADS"] = "4"
+# os.environ["MKL_NUM_THREADS"] = "4"
+# os.environ["VECLIB_MAXIMUM_THREADS"] = "4"
+# os.environ["NUMEXPR_NUM_THREADS"] = "4"
+
+import pandas as pd
+import numpy as np
+import argparse
+from clean import read_data, feature_creation
+from multiprocessing import Process
+from datetime import datetime, timedelta
+from model_training import tuning
+from experiments import EXPERIMENT_ID_TO_PARAMETERS
+# from bt_run import backtest_run
+
+
+
+def run(args):
+    print("Begin....")
+    data_dir_path = args.data_dir_path
+    exp_info = EXPERIMENT_ID_TO_PARAMETERS[args.exp_id]
+
+    output_dir_path = exp_info["output_dir"]
+    if not os.path.exists(output_dir_path):
+        os.mkdir(output_dir_path)
+
+    model_best_params_path = os.path.join(output_dir_path,'model_best_params.yaml')
+
+    current_day = exp_info["current_day"]
+    pair_name = exp_info["pair_name"]
+
+    # get a previous day datetime
+    current_date_object = datetime.strptime(current_day, '%d.%m.%Y').date()
+    previous_date_object = current_date_object - timedelta(days=1)
+    previous_day = previous_date_object.strftime('%d.%m.%Y')
+
+    current_day_splitted = current_day.split(".")
+    previous_day_splitted = previous_day.split(".")
+
+    # get a paths to current and previous days for model training
+    current_day_path = os.path.join(data_dir_path, pair_name+"_"+current_day_splitted[-1]+"_"+current_day_splitted[-2]+"_"+current_day_splitted[0]+".csv")
+    previous_day_path = os.path.join(data_dir_path, pair_name+"_"+previous_day_splitted[-1]+"_"+previous_day_splitted[-2]+"_"+previous_day_splitted[0]+".csv")
+
+    print("All path sets correctly!")
+    print("Start loading data....")
+    # load training data
+    tic = time.perf_counter()
+    data_current_day = read_data(current_day_path)
+    # data_previous_day = read_data(previous_day_path)
+    toc = time.perf_counter()
+    print(f"Current day data loaded in {toc - tic:0.4f} seconds")
+
+
+    print("Data loaded!")
+    # merge two dataframes for training:
+    # training_data = pd.concat([data_previous_day, data_current_day])
+    # training_data = data_current_day.copy()
+
+    print("Creating features...")
+    # TruePrice - target column
+    df = feature_creation(data_current_day)
+    print("Features created!")
+
+    print("Start training...")
+    # Train model + tune hyperparams with Optuna
+    # Generate random borders
+    start = np.random.randint(0, len(df) - 1000000)  # select 100 rows
+    end = start + 1000000
+    tuning(df.iloc[start:end], model_best_params_path)
+
+    print("Model tuned!")
+    # start BackTest on other dates:
+
+
+
+
+    # part_jobs = []
+    # for part_name in os.listdir(test_dir_path):
+    #     full_part_test_path = os.path.join(test_dir_path, part_name)
+    #     full_part_output_path = os.path.join(output_dir_path, f'res-{part_name}')
+
+    #     part_jobs.append(Process(target=_run_part, args=(
+    #         full_part_test_path,
+    #         full_part_output_path,
+    #         completions_path,
+    #         exp_id,
+    #         model_path
+    #     )))
+
+    # for job in part_jobs:
+    #     job.start()
+
+    # for job in part_jobs:
+    #     job.join()
+
+    # _merge_results(output_dir_path)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--data-dir-path', type=str, help='Path to input data dir', required=True)
+    # parser.add_argument('--current-day', type=str, help='Current day for training model', required=True)
+    # parser.add_argument('--output-dir-path', type=str, help='Path to output dumped metric results', required=True)
+    # parser.add_argument('--pair-name', type=str, help='Name of traiding pair Ex. BTCUSDT', required=True)
+    # parser.add_argument('--model-path', type=str, help='Path to model', required=True)
+    parser.add_argument('--exp-id', type=int, help='Id of experiment', required=True)
+    args = parser.parse_args()
+
+    run(args)
