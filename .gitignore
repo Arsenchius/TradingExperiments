@@ -162,3 +162,4 @@ cython_debug/
 # some additional files
 sandbox.ipynb
 .vscode/
+strategy.py
