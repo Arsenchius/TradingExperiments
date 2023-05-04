@@ -84,7 +84,7 @@ def _train(model, csv_reader, total_chunks):
     return model, overall_mse, total_samples
 
 
-def model_training(path_to_current_day_data, path_to_previous_day_data, path_to_params_config, path_to_model):
+def model_training(path_to_current_day_data, path_to_previous_day_data, path_to_params_config, path_to_model_json, path_to_model_txt):
     chunk_size = 1000000
     csv_reader_current_day = pd.read_csv(path_to_current_day_data, chunksize=chunk_size, sep="|", iterator=True)
     total_chunks_current_day = math.ceil(sum(1 for line in open(path_to_current_day_data)) / chunk_size)
@@ -106,7 +106,9 @@ def model_training(path_to_current_day_data, path_to_previous_day_data, path_to_
     print(f'Overall MSE: {overall_mse}')
 
     # Save trained model to JSON file
-    with open(path_to_model, 'w') as f:
-        json.dump(lgb_model.booster_.dump_model(num_iteration=lgb_model.best_iteration_), f)
+    model_json = json.dumps(lgb_model.booster_.dump_model())
+    with open(path_to_model_json, 'w') as f:
+        f.write(model_json)
 
-
+    # Save trained model to txt file
+    lgb_model.booster_.save_model(path_to_model_txt)

@@ -17,8 +17,7 @@ from multiprocessing import Process
 from datetime import datetime, timedelta
 from model_training import tuning, model_training
 from experiments import EXPERIMENT_ID_TO_PARAMETERS
-
-# from bt_run import backtest_run
+from bt_run import backtest_run
 
 # import warnings
 # warnings.filterwarnings("ignore")
@@ -34,7 +33,8 @@ def run(args):
         os.mkdir(output_dir_path)
 
     model_best_params_path = os.path.join(output_dir_path, "model_best_params.yaml")
-    model_path = os.path.join(output_dir_path, "model.json")
+    model_path_json = os.path.join(output_dir_path, "model.json")
+    model_path_txt = os.path.join(output_dir_path, "model.txt")
 
     current_day = exp_info["current_day"]
     pair_name = exp_info["pair_name"]
@@ -79,11 +79,13 @@ def run(args):
 
     print("Start model training...")
     model_training(
-        current_day_path, previous_day_path, model_best_params_path, model_path
+        current_day_path, previous_day_path, model_best_params_path, model_path_json, model_path_txt
     )
     print("Model trained!")
 
     # start BackTest on other dates:
+    # print("Run BackTest...")
+    # backtest_run(model_path, current_day_path, previous_day_path, data_dir_path)
 
     # part_jobs = []
     # for part_name in os.listdir(test_dir_path):

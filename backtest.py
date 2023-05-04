@@ -12,6 +12,8 @@ class Backtest:
         self.data = data
         self.strategy = strategy
         self.closed_orders = []
+        self.open_orders = []
+        self.cur_pos = 0
 
     def dump_results(self, path_to_folder: str):
         chunk_size = 50000
@@ -24,6 +26,14 @@ class Backtest:
                 json.dump(chunk, f)
 
     def summary(self, fee):
+        while self.open_orders:
+            current_order = self.open_orders.pop()
+            index = 1
+            if current_order.action == "sell":
+                # while current_order.volume >
+                pass
+            elif current_order.action == "buy":
+                pass
         results = {
             "total_trades": len(self.closed_orders)
         }
@@ -55,14 +65,11 @@ class Backtest:
 
     def run_backtest(self, latency, fee):
 
-        open_orders = []
-        cur_pos = 0
-
         for index, row in tqdm(self.data.iterrows(), total=self.data.shape[0]):
             # last_received_time = float(row["adapter_time"].timestamp())
             last_received_time = float(index.timestamp())
-            if open_orders:
-                current_order = open_orders.pop()
+            if self.open_orders:
+                current_order = self.open_orders.pop()
                 if current_order.time_received + latency <= last_received_time:
                     if current_order.action == "sell":
                         # for i in range(25):
@@ -71,7 +78,7 @@ class Backtest:
                         if row["amt_buy_1"] >= current_order.volume:
                             current_order.price = row["px_buy_1"]
                             self.closed_orders.append(current_order)
-                            cur_pos -= current_order.volume
+                            self.cur_pos -= current_order.volume
                     elif current_order.action == "buy":
                         # for i in range(25):
                         #     if row[f"px_sell_{i+1}"] <= current_order.price and row[f"amt_sell_{i+1}"] >= current_order.volume:
@@ -79,18 +86,18 @@ class Backtest:
                         if row["amt_sell_1"] >= current_order.volume:
                             current_order.price = row["px_sell_1"]
                             self.closed_orders.append(current_order)
-                            cur_pos += current_order.volume
+                            self.cur_pos += current_order.volume
             else:
                 # signal, price = self.strategy.get_signal(self.data.loc[index], fee, cur_pos)
-                signal, price = self.strategy.get_signal(row, fee, cur_pos)
+                signal, price = self.strategy.get_signal(row, fee, self.cur_pos)
                 if signal == 1:
                     order = Order(order_type="market", action="buy", price=price, volume=self.strategy.size, max_volume=self.strategy.max_position, time_received=last_received_time, stop_loss=None, take_profit= None)
-                    open_orders.append(order)
+                    self.open_orders.append(order)
                 elif signal == 0:
                     continue
                 elif signal == -1:
                     order = Order(order_type="market", action="sell", price=price, volume=self.strategy.size, max_volume=self.strategy.max_position, time_received=last_received_time, stop_loss=None, take_profit=None)
-                    open_orders.append(order)
+                    self.open_orders.append(order)
 
         results = self.summary(fee)
 
