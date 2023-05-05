@@ -41,10 +41,10 @@ def objective(
         test = data.iloc[val_index]
 
         X_train = train[features]
-        y_train = train['TruePrice']
+        y_train = train['LagTruePrice']
 
         X_test = test[features]
-        y_test = test['TruePrice']
+        y_test = test['LagTruePrice']
 
         train_data = lgb.Dataset(X_train, label=y_train)
         val_data = lgb.Dataset(X_test, label=y_test)

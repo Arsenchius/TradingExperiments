@@ -284,6 +284,7 @@ def feature_creation(df: pd.DataFrame) -> pd.DataFrame:
     df["slope10"] = (s10b - s10a) / (np.abs(s10b) + np.abs(s10a))
 
     df["TruePrice"] = df[["px_buy_1", "px_sell_1"]].mean(axis=1)
+    df["LagTruePrice"] = (df['TruePrice'] - df['TruePrice'].shift(1)).fillna(0)
     df["MeanRev2"] = (df["TruePrice"] - df["TruePrice"].rolling(20).mean()).fillna(0)
     df["MeanRev1"] = (df["TruePrice"] - df["TruePrice"].rolling(10).mean()).fillna(0)
 

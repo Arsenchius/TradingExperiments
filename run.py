@@ -71,14 +71,14 @@ def run(args):
     print("Model trained!")
 
     # start tuning params on data:
-    print("Start strategy parameters tuning")
-    parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path)
-    print("Strategy parameters tuning finished!")
+    # print("Start strategy parameters tuning")
+    # parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path)
+    # print("Strategy parameters tuning finished!")
 
     # start BackTest on other dates:
-    print("Run BackTest...")
-    backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path)
-    print("Backtest finished!")
+    # print("Run BackTest...")
+    # backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path)
+    # print("Backtest finished!")
 
     # part_jobs = []
     # for part_name in os.listdir(test_dir_path):

@@ -29,17 +29,17 @@ def tuning(path_to_data: str, path_to_params_config: str) -> NoReturn:
 
     # df = data.drop(["host_time", "sent_time"], axis=1)
     features = list(df.columns)
-    features.remove('TruePrice')
+    features.remove('LagTruePrice')
 
     # Run hyperparameter optimization
     study = optuna.create_study(direction='minimize')
     func = lambda trial: objective(trial, df, features)
-    study.optimize(func, n_trials=1)
+    study.optimize(func, n_trials=30)
 
     # Train final model using best hyperparameters
     best_params = study.best_params
     X_train = df[features]
-    y_train = df['TruePrice']
+    y_train = df['LagTruePrice']
 
     train_data = lgb.Dataset(X_train, label=y_train)
     model = lgb.train(best_params, train_data, valid_sets=lgb.Dataset(X_train, y_train), verbose_eval=False)
@@ -68,8 +68,8 @@ def _train(model, csv_reader, total_chunks):
         chunk = read_data(chunk)
         chunk = feature_creation(chunk)
 
-        X_chunk = chunk.drop(columns=['TruePrice'])
-        y_chunk = chunk['TruePrice']
+        X_chunk = chunk.drop(columns=['LagTruePrice'])
+        y_chunk = chunk['LagTruePrice']
 
         model.fit(X_chunk, y_chunk, eval_set=[(X_chunk, y_chunk)], eval_metric='mse', verbose=False)
 
