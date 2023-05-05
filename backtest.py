@@ -8,8 +8,8 @@ from order import Order
 
 class Backtest:
 
-    def __init__(self, data, strategy):
-        self.data = data
+    def __init__(self, strategy):
+        # self.data = data
         self.strategy = strategy
         self.closed_orders = []
         self.open_orders = []
@@ -26,14 +26,14 @@ class Backtest:
                 json.dump(chunk, f)
 
     def summary(self, fee):
-        while self.open_orders:
-            current_order = self.open_orders.pop()
-            index = 1
-            if current_order.action == "sell":
-                # while current_order.volume >
-                pass
-            elif current_order.action == "buy":
-                pass
+        # while self.open_orders:
+        #     current_order = self.open_orders.pop()
+        #     index = 1
+        #     if current_order.action == "sell":
+        #         # while current_order.volume >
+        #         pass
+        #     elif current_order.action == "buy":
+        #         pass
         results = {
             "total_trades": len(self.closed_orders)
         }
@@ -63,9 +63,9 @@ class Backtest:
 
         return results
 
-    def run_backtest(self, latency, fee):
+    def run_backtest(self, data, latency, fee):
 
-        for index, row in tqdm(self.data.iterrows(), total=self.data.shape[0]):
+        for index, row in tqdm(data.iterrows(), total=data.shape[0]):
             # last_received_time = float(row["adapter_time"].timestamp())
             last_received_time = float(index.timestamp())
             if self.open_orders:
@@ -99,9 +99,9 @@ class Backtest:
                     order = Order(order_type="market", action="sell", price=price, volume=self.strategy.size, max_volume=self.strategy.max_position, time_received=last_received_time, stop_loss=None, take_profit=None)
                     self.open_orders.append(order)
 
-        results = self.summary(fee)
+        # results = self.summary(fee)
 
-        return results
+        # return results
 
     def plot_results(self):
         return

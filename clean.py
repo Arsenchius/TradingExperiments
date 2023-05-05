@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def read_data(df):
+def read_data(df: pd.DataFrame) -> pd.DataFrame:
     # df = pd.read_csv(path_to_data, sep="|")
     # df = df.iloc[10:-10]
     df = df.reset_index().drop("index", axis=1)
@@ -190,7 +190,7 @@ def shift1(arr, num, fill_value=np.nan):
     return arr
 
 
-def feature_creation(df):
+def feature_creation(df: pd.DataFrame) -> pd.DataFrame:
     # df = data.copy()
     # df["time"] = df.index
     # df = df[~df["time"].duplicated(keep="first")]

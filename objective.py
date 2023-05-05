@@ -5,12 +5,19 @@ from sklearn.metrics import mean_squared_error
 import lightgbm as lgb
 
 # Define objective function for Optuna
-def objective(trial, data, features:List[str], number_of_splits: int = 5, test_size: float = 0.15):
+def objective(
+    trial: Trial,
+    data: pd.DataFrame,
+    features:List[str],
+    number_of_splits: int = 5,
+    test_size: float = 0.15
+    ) -> float:
     # Define hyperparameters to optimize
     params = {
         'objective': 'regression',
         'metric': 'rmse',
         'boosting_type': 'gbdt',
+        'num_leaves': trial.suggest_int('num_leaves', 2, 256),
         'num_leaves': trial.suggest_int('num_leaves', 2, 256),
         'lambda_l1': trial.suggest_loguniform('lambda_l1', 1e-8, 10.0),
         'lambda_l2': trial.suggest_loguniform('lambda_l2', 1e-8, 10.0),
@@ -47,5 +54,4 @@ def objective(trial, data, features:List[str], number_of_splits: int = 5, test_s
         rmse_scores.append(mean_squared_error(y_test, y_pred, squared=False))
 
     return sum(rmse_scores) / len(rmse_scores)
-
 

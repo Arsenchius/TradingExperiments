@@ -17,10 +17,12 @@ from multiprocessing import Process
 from datetime import datetime, timedelta
 from model_training import tuning, model_training
 from experiments import EXPERIMENT_ID_TO_PARAMETERS
-from bt_run import backtest_run
+from bt_run import backtest_run, parameters_optimization
 
-# import warnings
-# warnings.filterwarnings("ignore")
+
+def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
+    date_splitted = date_.split(".")
+    return os.path.join(data_dir_path, pair_name+"_"+ date_splitted[-1]+ "_"+ date_splitted[-2]+ "_"+ date_splitted[0]+ ".csv")
 
 
 def run(args):
@@ -35,9 +37,12 @@ def run(args):
     model_best_params_path = os.path.join(output_dir_path, "model_best_params.yaml")
     model_path_json = os.path.join(output_dir_path, "model.json")
     model_path_txt = os.path.join(output_dir_path, "model.txt")
+    strategy_best_params_path = os.path.join(output_dir_path, "strategy_params.json")
+    backtest_results_path = os.path.join(output_dir_path, "backtest_results.json")
 
     current_day = exp_info["current_day"]
     pair_name = exp_info["pair_name"]
+    date_for_strategy_tuning = exp_info["date_for_strategy_params_tuning"]
 
     # get a previous day datetime
     current_date_object = datetime.strptime(current_day, "%d.%m.%Y").date()
@@ -46,30 +51,12 @@ def run(args):
 
     current_day_splitted = current_day.split(".")
     previous_day_splitted = previous_day.split(".")
+    date_for_strategy_tuning_splitted = date_for_strategy_tuning.split(".")
 
     # get a paths to current and previous days for model training
-    current_day_path = os.path.join(
-        data_dir_path,
-        pair_name
-        + "_"
-        + current_day_splitted[-1]
-        + "_"
-        + current_day_splitted[-2]
-        + "_"
-        + current_day_splitted[0]
-        + ".csv",
-    )
-    previous_day_path = os.path.join(
-        data_dir_path,
-        pair_name
-        + "_"
-        + previous_day_splitted[-1]
-        + "_"
-        + previous_day_splitted[-2]
-        + "_"
-        + previous_day_splitted[0]
-        + ".csv",
-    )
+    current_day_path = _aggregate(current_day, data_dir_path, pair_name)
+    previous_day_path = _aggregate(previous_day, data_dir_path, pair_name)
+    data_for_strategy_tuning_path = _aggregate(date_for_strategy_tuning, data_dir_path, pair_name)
 
     print("All path sets correctly!")
 
@@ -83,9 +70,15 @@ def run(args):
     )
     print("Model trained!")
 
+    # start tuning params on data:
+    print("Start strategy parameters tuning")
+    parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path)
+    print("Strategy parameters tuning finished!")
+
     # start BackTest on other dates:
-    # print("Run BackTest...")
-    # backtest_run(model_path, current_day_path, previous_day_path, data_dir_path)
+    print("Run BackTest...")
+    backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path)
+    print("Backtest finished!")
 
     # part_jobs = []
     # for part_name in os.listdir(test_dir_path):

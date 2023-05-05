@@ -10,13 +10,14 @@ import json
 import math
 import random
 from clean import read_data, feature_creation
+from typing import NoReturn
 
 import warnings
 warnings.filterwarnings("ignore")
 
 
 
-def tuning(path_to_data, path_to_params_config):
+def tuning(path_to_data: str, path_to_params_config: str) -> NoReturn:
     chunk_size = 10 ** 6
     total_chunks = math.ceil(sum(1 for line in open(path_to_data)) / chunk_size)
     csv_reader = pd.read_csv(path_to_data, chunksize=chunk_size, sep="|", iterator=True)
@@ -84,7 +85,13 @@ def _train(model, csv_reader, total_chunks):
     return model, overall_mse, total_samples
 
 
-def model_training(path_to_current_day_data, path_to_previous_day_data, path_to_params_config, path_to_model_json, path_to_model_txt):
+def model_training(
+    path_to_current_day_data: str,
+    path_to_previous_day_data: str,
+    path_to_params_config: str,
+    path_to_model_json: str,
+    path_to_model_txt: str
+    )-> NoReturn:
     chunk_size = 1000000
     csv_reader_current_day = pd.read_csv(path_to_current_day_data, chunksize=chunk_size, sep="|", iterator=True)
     total_chunks_current_day = math.ceil(sum(1 for line in open(path_to_current_day_data)) / chunk_size)
