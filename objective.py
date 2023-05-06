@@ -3,6 +3,7 @@ from typing import Callable, List
 from optuna.trial import Trial
 from sklearn.metrics import mean_squared_error
 import lightgbm as lgb
+import pandas as pd
 
 # Define objective function for Optuna
 def objective(
