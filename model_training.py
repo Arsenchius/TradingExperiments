@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
+import os
 import lightgbm as lgb
+import catboost as cb
 import optuna
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
@@ -64,7 +66,7 @@ def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str) -> 
     logging.info('Best parameters saved to config file!')
 
 
-def _train(model, csv_reader, total_chunks):
+def _train(model, csv_reader, total_chunks, model_name):
     # Initialize variables to store overall MSE and total number of samples
     overall_mse, total_samples = .0, 0
 
@@ -79,7 +81,11 @@ def _train(model, csv_reader, total_chunks):
         X_chunk = chunk.drop(columns=['LagTruePrice'])
         y_chunk = chunk['LagTruePrice']
 
-        model.fit(X_chunk, y_chunk, eval_set=[(X_chunk, y_chunk)], eval_metric='mse', verbose=False)
+        match model_name:
+            case "LGBM":
+                model.fit(X_chunk, y_chunk, eval_set=[(X_chunk, y_chunk)], eval_metric='mse', verbose=False)
+            case "CB":
+                model.fit(X_chunk, y_chunk, eval_set=[(X_chunk, y_chunk)], verbose=False, )
 
         # Predict target variable for chunk of data
         preds_chunk = model.predict(X_chunk)
@@ -97,9 +103,9 @@ def model_training(
     path_to_current_day_data: str,
     path_to_previous_day_data: str,
     path_to_params_config: str,
-    path_to_model_json: str,
-    path_to_model_txt: str,
+    output_dir_path: str,
     log_file_path: str,
+    model_name: str,
     )-> NoReturn:
     logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
     logger = logging.getLogger()
@@ -113,10 +119,17 @@ def model_training(
     with open(path_to_params_config, 'r') as file:
         best_params = yaml.safe_load(file)
 
-    lgb_model = lgb.LGBMRegressor(**best_params)
+    match model_name:
+        case "LGBM":
+            model = lgb.LGBMRegressor(**best_params)
+        case "CB":
+            model = cb.CatBoost()
+            catboost_info_dir = os.path.join(output_dir_path, "catboost_info")
+            best_params['train_dir'] = catboost_info_dir
+            model.set_params(**best_params)
 
-    lgb_model, overall_mse_current, total_samples_current = _train(lgb_model, csv_reader_current_day, total_chunks_current_day)
-    lgb_model, overall_mse_previous, total_samples_previous = _train(lgb_model, csv_reader_previous_day, total_chunks_previous_day)
+    model, overall_mse_current, total_samples_current = _train(model, csv_reader_current_day, total_chunks_current_day, model_name)
+    model, overall_mse_previous, total_samples_previous = _train(model, csv_reader_previous_day, total_chunks_previous_day, model_name)
 
     # Calculate weighted average of MSEs for all chunks
     overall_mse = (overall_mse_current + overall_mse_previous) / (total_samples_current + total_chunks_previous_day)
@@ -124,10 +137,17 @@ def model_training(
     # print(f'Overall MSE: {overall_mse}')
     logging.info(f'Overall MSE: {overall_mse}')
 
-    # Save trained model to JSON file
-    model_json = json.dumps(lgb_model.booster_.dump_model())
-    with open(path_to_model_json, 'w') as f:
-        f.write(model_json)
+    match model_name:
+        case "LGBM":
+            model_path_json = os.path.join(output_dir_path, "lgb_model.json")
+            model_path_txt = os.path.join(output_dir_path, "lgb_model.txt")
+            # Save trained model to JSON file
+            model_json = json.dumps(model.booster_.dump_model())
+            with open(path_to_model_json, 'w') as f:
+                f.write(model_json)
 
-    # Save trained model to txt file
-    lgb_model.booster_.save_model(path_to_model_txt)
+            # Save trained model to txt file
+            model.booster_.save_model(path_to_model_txt)
+        case "CB":
+            model_path_bin = os.path.join(output_dir_path, "catboost_model.bin")
+            model.save_model(model_path_bin)

@@ -43,8 +43,7 @@ def run(args):
     logging.info('Begin execution')
     logging.info("Start setting paths...")
     model_best_params_path = os.path.join(output_dir_path, "model_best_params.yaml")
-    model_path_json = os.path.join(output_dir_path, "model.json")
-    model_path_txt = os.path.join(output_dir_path, "model.txt")
+
     strategy_best_params_path = os.path.join(output_dir_path, "strategy_params.json")
     backtest_results_path = os.path.join(output_dir_path, "backtest_results.json")
 
@@ -74,7 +73,7 @@ def run(args):
 
     # logging.info('Start model training...')
     # model_training(
-    #     current_day_path, previous_day_path, model_best_params_path, model_path_json, model_path_txt, log_file_path
+    #     current_day_path, previous_day_path, model_best_params_path, output_dir_path, log_file_path, model_name="CB"
     # )
     # logging.info('Model trained!')
 
