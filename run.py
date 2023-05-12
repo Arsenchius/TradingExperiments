@@ -19,6 +19,9 @@ from model_training import tuning, model_training
 from experiments import EXPERIMENT_ID_TO_PARAMETERS
 from bt_run import backtest_run, parameters_optimization
 
+import logging
+import logging.config
+
 
 def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
     date_splitted = date_.split(".")
@@ -26,14 +29,19 @@ def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
 
 
 def run(args):
-    print("Begin....")
+    # print("Begin....")
     data_dir_path = args.data_dir_path
     exp_info = EXPERIMENT_ID_TO_PARAMETERS[args.exp_id]
 
     output_dir_path = exp_info["output_dir"]
     if not os.path.exists(output_dir_path):
         os.mkdir(output_dir_path)
+    log_file_path = os.path.join(output_dir_path, "execution.log")
+    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logger = logging.getLogger()
 
+    logging.info('Begin execution')
+    logging.info("Start setting paths...")
     model_best_params_path = os.path.join(output_dir_path, "model_best_params.yaml")
     model_path_json = os.path.join(output_dir_path, "model.json")
     model_path_txt = os.path.join(output_dir_path, "model.txt")
@@ -58,27 +66,27 @@ def run(args):
     previous_day_path = _aggregate(previous_day, data_dir_path, pair_name)
     data_for_strategy_tuning_path = _aggregate(date_for_strategy_tuning, data_dir_path, pair_name)
 
-    print("All path sets correctly!")
+    logging.info('All path sets correctly!')
 
-    print("Start tuning...")
-    tuning(current_day_path, model_best_params_path)
-    print("Tuning model finished!")
+    # logging.info('Start tuning...')
+    # tuning(current_day_path, model_best_params_path, log_file_path)
+    # logging.info('Tuning model finished!')
 
-    print("Start model training...")
-    model_training(
-        current_day_path, previous_day_path, model_best_params_path, model_path_json, model_path_txt
-    )
-    print("Model trained!")
+    # logging.info('Start model training...')
+    # model_training(
+    #     current_day_path, previous_day_path, model_best_params_path, model_path_json, model_path_txt, log_file_path
+    # )
+    # logging.info('Model trained!')
 
     # start tuning params on data:
-    # print("Start strategy parameters tuning")
-    # parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path)
-    # print("Strategy parameters tuning finished!")
+    logging.info('Start strategy parameters tuning')
+    parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path)
+    logging.info('Strategy parameters tuning finished!')
 
     # start BackTest on other dates:
-    # print("Run BackTest...")
+    # logging.info('Run BackTest...')
     # backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path)
-    # print("Backtest finished!")
+    # logging.info('Backtest finished!')
 
     # part_jobs = []
     # for part_name in os.listdir(test_dir_path):

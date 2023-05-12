@@ -160,6 +160,6 @@ cython_debug/
 #.idea/
 
 # some additional files
-sandbox.ipynb
+.notebooks/sandbox.ipynb
 .vscode/
 strategy.py

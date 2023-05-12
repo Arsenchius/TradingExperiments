@@ -64,7 +64,6 @@ class Backtest:
         return results
 
     def run_backtest(self, data, latency, fee):
-
         for index, row in tqdm(data.iterrows(), total=data.shape[0]):
             # last_received_time = float(row["adapter_time"].timestamp())
             last_received_time = float(index.timestamp())

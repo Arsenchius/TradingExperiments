@@ -25,7 +25,7 @@ def _process(
     # Load the model using the model saved file
     model = lgb.Booster(model_file=path_to_model)
 
-    aggr_strategy = Strategy(model, threshold = params['threshold'], size= params['size'], max_position=params['max_position'], adj_coeff=params["adj_coef"])
+    aggr_strategy = Strategy(threshold = params['threshold'], size= params['size'], max_position=params['max_position'], adj_coeff=params["adj_coef"])
     bt = Backtest(aggr_strategy)
 
     for i, chunk in enumerate(csv_reader):
@@ -35,6 +35,7 @@ def _process(
             chunk = chunk.iloc[:-10]
         chunk = read_data(chunk)
         chunk = feature_creation(chunk)
+        chunk["predicted"] = model.predict(chunk.drop(["LagTruePrice"], axis=1))
         bt.run_backtest(data=chunk, latency=latency, fee=fee)
 
     return bt.summary(fee=fee)
@@ -47,10 +48,15 @@ def objective_function(
 
     # Define the search space for the input parameter
     parameters = {
-        "threshold": trial.suggest_int('threshold', 20000, 40000),
-        "size": trial.suggest_uniform('size', 0.1, 1.0),
+        # "threshold": trial.suggest_int('threshold', 20000, 40000),
+        # "threshold": trial.suggest_loguniform('threshold', 5, 1200, 50),
+        # "size": trial.suggest_loguniform('size', 0.01, 1.0, 0.05),
+        # "max_position": trial.suggest_uniform('max_position', 1.0, 1.5),
+        # "adj_coef": trial.suggest_int('adj_coef', 1, 100, 5),
+        "threshold": trial.suggest_loguniform('threshold', 5, 1200),
+        "size": trial.suggest_loguniform('size', 0.01, 1.0),
         "max_position": trial.suggest_uniform('max_position', 1.0, 1.5),
-        "adj_coef": trial.suggest_int('adj_coef', 100, 1000),
+        "adj_coef": trial.suggest_int('adj_coef', 1, 100, 5),
     }
 
     # Evaluate the output of the function

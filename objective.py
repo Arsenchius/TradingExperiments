@@ -18,8 +18,6 @@ def objective(
         'objective': 'regression',
         'metric': 'rmse',
         'boosting_type': 'gbdt',
-        'num_leaves': trial.suggest_int('num_leaves', 2, 256),
-        'num_leaves': trial.suggest_int('num_leaves', 2, 256),
         'lambda_l1': trial.suggest_loguniform('lambda_l1', 1e-8, 10.0),
         'lambda_l2': trial.suggest_loguniform('lambda_l2', 1e-8, 10.0),
         'learning_rate': trial.suggest_loguniform('learning_rate', 1e-8, 1.0),
@@ -29,9 +27,12 @@ def objective(
         'min_child_samples': trial.suggest_int('min_child_samples', 5, 100),
         'num_boost_round': trial.suggest_int('num_boost_round', 10, 1000),
         'early_stopping_rounds': trial.suggest_int('early_stopping_rounds', 5, 50),
+        'max_depth': trial.suggest_int('max_depth', 3, 12),
+        'n_estimators': trial.suggest_int('n_estimators', 50, 1000),
         'verbose': -1,
     }
 
+    params["num_leaves"] = trial.suggest_categorical('num_leaves', [2 ** params['max_depth']]),
 
     # Train and evaluate model using time series cross-validation
     tss = TimeSeriesSplit(n_splits=number_of_splits, test_size=int(data.shape[0] * test_size))

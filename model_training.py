@@ -14,10 +14,14 @@ from typing import NoReturn
 
 import warnings
 warnings.filterwarnings("ignore")
+import logging
+import logging.config
 
 
 
-def tuning(path_to_data: str, path_to_params_config: str) -> NoReturn:
+def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str) -> NoReturn:
+    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logger = logging.getLogger()
     chunk_size = 10 ** 6
     total_chunks = math.ceil(sum(1 for line in open(path_to_data)) / chunk_size)
     csv_reader = pd.read_csv(path_to_data, chunksize=chunk_size, sep="|", iterator=True)
@@ -34,7 +38,7 @@ def tuning(path_to_data: str, path_to_params_config: str) -> NoReturn:
     # Run hyperparameter optimization
     study = optuna.create_study(direction='minimize')
     func = lambda trial: objective(trial, df, features)
-    study.optimize(func, n_trials=30)
+    study.optimize(func, n_trials=1)
 
     # Train final model using best hyperparameters
     best_params = study.best_params
@@ -47,13 +51,17 @@ def tuning(path_to_data: str, path_to_params_config: str) -> NoReturn:
     # Evaluate model
     y_pred = model.predict(X_train)
     mse = mean_squared_error(y_train, y_pred)
-    print('Best model trained with MSE:', mse)
+    logging.info(f'Best model trained with MSE: {mse}')
+    # print('Best model trained with MSE:', mse)
 
     # Save best params to YAML file
+    params = best_params
+    params['num_leaves'] = 2 ** params['max_depth']
     with open(path_to_params_config, 'w') as f:
-        yaml.dump(best_params, f)
+        yaml.dump(params, f)
 
-    print('Best parameters saved to config file!')
+    # print('Best parameters saved to config file!')
+    logging.info('Best parameters saved to config file!')
 
 
 def _train(model, csv_reader, total_chunks):
@@ -90,8 +98,11 @@ def model_training(
     path_to_previous_day_data: str,
     path_to_params_config: str,
     path_to_model_json: str,
-    path_to_model_txt: str
+    path_to_model_txt: str,
+    log_file_path: str,
     )-> NoReturn:
+    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logger = logging.getLogger()
     chunk_size = 1000000
     csv_reader_current_day = pd.read_csv(path_to_current_day_data, chunksize=chunk_size, sep="|", iterator=True)
     total_chunks_current_day = math.ceil(sum(1 for line in open(path_to_current_day_data)) / chunk_size)
@@ -110,7 +121,8 @@ def model_training(
     # Calculate weighted average of MSEs for all chunks
     overall_mse = (overall_mse_current + overall_mse_previous) / (total_samples_current + total_chunks_previous_day)
 
-    print(f'Overall MSE: {overall_mse}')
+    # print(f'Overall MSE: {overall_mse}')
+    logging.info(f'Overall MSE: {overall_mse}')
 
     # Save trained model to JSON file
     model_json = json.dumps(lgb_model.booster_.dump_model())
