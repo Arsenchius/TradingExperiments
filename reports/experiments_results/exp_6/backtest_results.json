@@ -1,0 +1,58 @@
+{
+    "13.03.2023": {
+        "total_trades": 4943,
+        "buy_orders_cnt": 2470,
+        "buy_orders_amt": 328.6880853000204,
+        "sell_orders_cnt": 2473,
+        "sell_orders_amt": 329.0873015979556,
+        "returns": -6.985900021914116e-05
+    },
+    "02.04.2023": {
+        "total_trades": 298,
+        "buy_orders_cnt": 146,
+        "buy_orders_amt": 19.42852649951519,
+        "sell_orders_cnt": 152,
+        "sell_orders_amt": 20.22695909538567,
+        "returns": -3.1159973502506984e-05
+    },
+    "01.04.2023": {
+        "total_trades": 125,
+        "buy_orders_cnt": 62,
+        "buy_orders_amt": 8.250470157328364,
+        "sell_orders_cnt": 63,
+        "sell_orders_amt": 8.383542256640112,
+        "returns": -6.0069719685274646e-06
+    },
+    "14.03.2023": {
+        "total_trades": 573,
+        "buy_orders_cnt": 284,
+        "buy_orders_amt": 37.792476204536236,
+        "sell_orders_cnt": 289,
+        "sell_orders_amt": 38.45783670109497,
+        "returns": -3.3515064752892854e-05
+    },
+    "15.03.2023": {
+        "total_trades": 1269,
+        "buy_orders_cnt": 632,
+        "buy_orders_amt": 84.10156676502409,
+        "sell_orders_cnt": 637,
+        "sell_orders_amt": 84.76692726158282,
+        "returns": -4.1823504770138864e-05
+    },
+    "31.03.2023": {
+        "total_trades": 681,
+        "buy_orders_cnt": 337,
+        "buy_orders_amt": 44.84529746805881,
+        "sell_orders_cnt": 344,
+        "sell_orders_amt": 45.77680216324104,
+        "returns": -3.890564005276217e-05
+    },
+    "15.04.2023": {
+        "total_trades": 204,
+        "buy_orders_cnt": 103,
+        "buy_orders_amt": 13.70642622911005,
+        "sell_orders_cnt": 101,
+        "sell_orders_amt": 13.440282030486554,
+        "returns": 7.030510810659828e-06
+    }
+}
