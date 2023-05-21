@@ -1,18 +1,19 @@
-import pandas as pd
-import lightgbm as lgb
 import os
 import json
 import math
-from tqdm import tqdm
-from clean import read_data, feature_creation
-from strategy import Strategy
-from backtest import Backtest
+import logging
+import logging.config
+
 import optuna
 from optuna.trial import Trial
 from optuna.pruners import SuccessiveHalvingPruner
-from typing import NoReturn
-import logging
-import logging.config
+import pandas as pd
+import lightgbm as lgb
+from tqdm import tqdm
+
+from clean import read_data, feature_creation
+from strategy import Strategy
+from backtest import Backtest
 
 
 def _process(

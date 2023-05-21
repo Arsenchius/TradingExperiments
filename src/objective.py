@@ -1,9 +1,10 @@
-from sklearn.model_selection import TimeSeriesSplit
 from typing import Callable, List
-from optuna.trial import Trial
-from sklearn.metrics import mean_squared_error
+
 import lightgbm as lgb
 import pandas as pd
+from optuna.trial import Trial
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import TimeSeriesSplit
 
 # Define objective function for Optuna
 def objective(
@@ -30,8 +31,6 @@ def objective(
         'early_stopping_rounds': trial.suggest_int('early_stopping_rounds', 5, 50),
         'max_depth': trial.suggest_int('max_depth', 3, 12),
         # 'num_leaves': 2 ** trial.suggest_int('max_depth', 3, 12),
-        # 'num_leaves': 2 ** 12,
-        # 'max_depth': 12,
         'n_estimators': trial.suggest_int('n_estimators', 20, 100),
         'verbose': -1,
     }

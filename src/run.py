@@ -1,5 +1,13 @@
 import os
 import time
+import argparse
+import math
+import random
+import logging
+import logging.config
+from multiprocessing import Process
+from datetime import datetime, timedelta
+
 
 # os.environ["OMP_NUM_THREADS"] = "4"
 # os.environ["OPENBLAS_NUM_THREADS"] = "4"
@@ -9,18 +17,12 @@ import time
 
 import pandas as pd
 import numpy as np
-import argparse
-import math
-import random
+
 from clean import read_data, feature_creation
-from multiprocessing import Process
-from datetime import datetime, timedelta
 from model_training import tuning, model_training
 from experiments import EXPERIMENT_ID_TO_PARAMETERS
 from bt_run import backtest_run, parameters_optimization
 
-import logging
-import logging.config
 
 
 def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
@@ -29,7 +31,6 @@ def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
 
 
 def run(args):
-    # print("Begin....")
     data_dir_path = args.data_dir_path
     exp_info = EXPERIMENT_ID_TO_PARAMETERS[args.exp_id]
 
@@ -68,20 +69,19 @@ def run(args):
 
     logging.info('All path sets correctly!')
 
-    # logging.info('Start tuning...')
-    # tuning(current_day_path, model_best_params_path, log_file_path)
-    # logging.info('Tuning model finished!')
+    logging.info('Start tuning...')
+    tuning(current_day_path, model_best_params_path, log_file_path)
+    logging.info('Tuning model finished!')
 
-    # logging.info('Start model training...')
-    # model_training(
-    #     current_day_path, previous_day_path, data_for_strategy_tuning_path, model_best_params_path, output_dir_path, log_file_path, model_name="LGBM"
-    # )
-    # logging.info('Model trained!')
+    logging.info('Start model training...')
+    model_training(
+        current_day_path, previous_day_path, data_for_strategy_tuning_path, model_best_params_path, output_dir_path, log_file_path, model_name="LGBM"
+    )
+    logging.info('Model trained!')
 
-    # start tuning params on data:
-    # logging.info('Start strategy parameters tuning')
-    # parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path, log_file_path)
-    # logging.info('Strategy parameters tuning finished!')
+    logging.info('Start strategy parameters tuning')
+    parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path, log_file_path)
+    logging.info('Strategy parameters tuning finished!')
 
     # start BackTest on other dates:
     logging.info('Run BackTest...')
