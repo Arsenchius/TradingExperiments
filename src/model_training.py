@@ -22,8 +22,8 @@ from clean import read_data, feature_creation
 warnings.filterwarnings("ignore")
 
 
-def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str) -> NoReturn:
-    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str, logger_path:str) -> NoReturn:
+    logging.config.fileConfig(logger_path, {'log_file_path': log_file_path})
     logger = logging.getLogger()
     chunk_size = 2000000
     total_chunks = math.ceil(sum(1 for line in open(path_to_data)) / chunk_size)
@@ -40,7 +40,7 @@ def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str) -> 
     # Run hyperparameter optimization
     study = optuna.create_study(direction='minimize')
     func = lambda trial: objective(trial, df, features)
-    study.optimize(func, n_trials=40)
+    study.optimize(func, n_trials=5)
 
     # Train final model using best hyperparameters
     best_params = study.best_params
@@ -129,9 +129,10 @@ def model_training(
     path_to_params_config: str,
     output_dir_path: str,
     log_file_path: str,
+    logger_path: str,
     model_name: str,
     )-> NoReturn:
-    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logging.config.fileConfig(logger_path, {'log_file_path': log_file_path})
     logger = logging.getLogger()
     chunk_size = 1000000
     csv_reader_current_day = pd.read_csv(path_to_current_day_data, chunksize=chunk_size, sep="|", iterator=True)

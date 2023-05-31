@@ -24,21 +24,21 @@ from experiments import EXPERIMENT_ID_TO_PARAMETERS
 from bt_run import backtest_run, parameters_optimization
 
 
-
 def _aggregate(date_: str, data_dir_path: str, pair_name: str) -> str:
     date_splitted = date_.split(".")
     return os.path.join(data_dir_path, pair_name+"_"+ date_splitted[-1]+ "_"+ date_splitted[-2]+ "_"+ date_splitted[0]+ ".csv")
 
 
 def run(args):
-    data_dir_path = args.data_dir_path
     exp_info = EXPERIMENT_ID_TO_PARAMETERS[args.exp_id]
+    data_dir_path = os.path.join(args.data_dir_path, exp_info["pair_name"].lower())
+    logger_file = args.logger_path
 
     output_dir_path = exp_info["output_dir"]
     if not os.path.exists(output_dir_path):
         os.mkdir(output_dir_path)
     log_file_path = os.path.join(output_dir_path, "execution.log")
-    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logging.config.fileConfig(logger_file, {'log_file_path': log_file_path})
     logger = logging.getLogger()
 
     logging.info('Begin execution')
@@ -70,23 +70,23 @@ def run(args):
     logging.info('All path sets correctly!')
 
     logging.info('Start tuning...')
-    tuning(current_day_path, model_best_params_path, log_file_path)
+    tuning(current_day_path, model_best_params_path, log_file_path, logger_file)
     logging.info('Tuning model finished!')
 
     logging.info('Start model training...')
     model_training(
-        current_day_path, previous_day_path, data_for_strategy_tuning_path, model_best_params_path, output_dir_path, log_file_path, model_name="LGBM"
+        current_day_path, previous_day_path, data_for_strategy_tuning_path, model_best_params_path, output_dir_path, log_file_path, logger_file, model_name="LGBM"
     )
     logging.info('Model trained!')
 
-    logging.info('Start strategy parameters tuning')
-    parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path, log_file_path)
-    logging.info('Strategy parameters tuning finished!')
+    # logging.info('Start strategy parameters tuning')
+    # parameters_optimization(model_path_txt, data_for_strategy_tuning_path, strategy_best_params_path, log_file_path)
+    # logging.info('Strategy parameters tuning finished!')
 
     # start BackTest on other dates:
-    logging.info('Run BackTest...')
-    backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path, log_file_path)
-    logging.info('Backtest finished!')
+    # logging.info('Run BackTest...')
+    # backtest_run(model_path_txt, current_day_path, previous_day_path, data_dir_path, backtest_results_path, strategy_best_params_path, log_file_path)
+    # logging.info('Backtest finished!')
 
     # part_jobs = []
     # for part_name in os.listdir(test_dir_path):
@@ -117,6 +117,7 @@ if __name__ == "__main__":
         "--data-dir-path", type=str, help="Path to input data dir", required=True
     )
     parser.add_argument("--exp-id", type=int, help="Id of experiment", required=True)
+    parser.add_argument("--logger-path", type=str, help="Path to logger config file", required=True)
     args = parser.parse_args()
 
     run(args)

@@ -1,0 +1,12 @@
+bagging_fraction: 0.6620812681430246
+bagging_freq: 8
+early_stopping_rounds: 38
+feature_fraction: 0.3005361230274878
+lambda_l1: 0.19595196443757887
+lambda_l2: 6.59192816010887e-08
+learning_rate: 0.044517633147993195
+max_depth: 4
+min_child_samples: 32
+n_estimators: 34
+num_boost_round: 559
+num_leaves: 16

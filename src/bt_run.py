@@ -3,6 +3,7 @@ import json
 import math
 import logging
 import logging.config
+from typing import NoReturn
 
 import optuna
 from optuna.trial import Trial
@@ -78,10 +79,11 @@ def parameters_optimization(
     model_path: str,
     path_to_data: str,
     strategy_params_path: str,
-    log_file_path: str
+    log_file_path: str,
+    logger_file: str,
     ) -> NoReturn:
     # Load the model using the model saved file
-    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logging.config.fileConfig(logger_file, {'log_file_path': log_file_path})
     logger = logging.getLogger()
     pruner = SuccessiveHalvingPruner(min_resource=1, reduction_factor=2, min_early_stopping_rate=0)
     study = optuna.create_study(pruner=pruner, direction='maximize')
@@ -101,9 +103,10 @@ def backtest_run(
     data_dir_path: str,
     backtest_results_path: str,
     strategy_params_path: str,
-    log_file_path: str
+    log_file_path: str,
+    logger_file: str,
     ) -> NoReturn:
-    logging.config.fileConfig('logging.conf', {'log_file_path': log_file_path})
+    logging.config.fileConfig(logger_file, {'log_file_path': log_file_path})
     logger = logging.getLogger()
     all_data_paths = [os.path.join(data_dir_path, x) for x in os.listdir(data_dir_path)]
     with open(strategy_params_path, 'r') as f:

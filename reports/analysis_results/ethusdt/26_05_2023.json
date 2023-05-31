@@ -1,0 +1,62 @@
+[
+    {
+        "vol": 0.01,
+        "total": 2938023,
+        "buy_chances": 9603,
+        "sell_chances": 9330
+    },
+    {
+        "vol": 0.02,
+        "total": 2938023,
+        "buy_chances": 5163,
+        "sell_chances": 5254
+    },
+    {
+        "vol": 0.03,
+        "total": 2938023,
+        "buy_chances": 3258,
+        "sell_chances": 3354
+    },
+    {
+        "vol": 0.04,
+        "total": 2938023,
+        "buy_chances": 1886,
+        "sell_chances": 2044
+    },
+    {
+        "vol": 0.05,
+        "total": 2938023,
+        "buy_chances": 1136,
+        "sell_chances": 1285
+    },
+    {
+        "vol": 0.060000000000000005,
+        "total": 2938023,
+        "buy_chances": 832,
+        "sell_chances": 907
+    },
+    {
+        "vol": 0.06999999999999999,
+        "total": 2938023,
+        "buy_chances": 586,
+        "sell_chances": 635
+    },
+    {
+        "vol": 0.08,
+        "total": 2938023,
+        "buy_chances": 431,
+        "sell_chances": 454
+    },
+    {
+        "vol": 0.09,
+        "total": 2938023,
+        "buy_chances": 339,
+        "sell_chances": 333
+    },
+    {
+        "vol": 0.09999999999999999,
+        "total": 2938023,
+        "buy_chances": 239,
+        "sell_chances": 252
+    }
+]
