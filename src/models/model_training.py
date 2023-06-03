@@ -7,7 +7,6 @@ import random
 import warnings
 import logging
 import logging.config
-from pathlib import Path
 from typing import NoReturn, Callable, List
 
 import lightgbm as lgb
