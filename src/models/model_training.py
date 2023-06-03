@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import json
 import math
@@ -6,21 +7,22 @@ import random
 import warnings
 import logging
 import logging.config
-from typing import NoReturn
+from pathlib import Path
+from typing import NoReturn, Callable, List
 
 import lightgbm as lgb
 import catboost as cb
 import pandas as pd
 import numpy as np
 import optuna
+from optuna.trial import Trial
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import TimeSeriesSplit
 
-from objective import objective
-from clean import read_data, feature_creation
+from models.objective import objective
+from data.clean import read_data, feature_creation
 
 warnings.filterwarnings("ignore")
-
 
 def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str, logger_path:str) -> NoReturn:
     logging.config.fileConfig(logger_path, {'log_file_path': log_file_path})
@@ -40,7 +42,7 @@ def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str, log
     # Run hyperparameter optimization
     study = optuna.create_study(direction='minimize')
     func = lambda trial: objective(trial, df, features)
-    study.optimize(func, n_trials=5)
+    study.optimize(func, n_trials=50)
 
     # Train final model using best hyperparameters
     best_params = study.best_params

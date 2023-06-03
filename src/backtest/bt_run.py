@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import math
 import logging
@@ -12,9 +13,9 @@ import pandas as pd
 import lightgbm as lgb
 from tqdm import tqdm
 
-from clean import read_data, feature_creation
-from strategy import Strategy
-from backtest import Backtest
+from data.clean import read_data, feature_creation
+from strategies.strategy import Strategy
+from backtest.backtest import Backtest
 
 
 def _process(

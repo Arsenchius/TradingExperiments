@@ -1,10 +1,12 @@
+import os
+import sys
+
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-from strategy import Strategy
-from order import Order
-
+from strategies.strategy import Strategy
+from strategies.order import Order
 
 
 class Backtest:

@@ -1,4 +1,5 @@
 import os
+import sys
 import math
 import json
 import warnings
@@ -12,7 +13,7 @@ import pandas as pd
 import numpy as np
 import lightgbm as lgb
 
-from clean import read_data, feature_creation
+from data.clean import read_data, feature_creation
 
 warnings.filterwarnings("ignore")
 
@@ -34,18 +35,27 @@ def _helper(df: pd.DataFrame, vol: float, fee: float) -> Tuple[int,int]:
 Time complexity for this execution is O(nlogn)
 For one dataframe with size <= 3 * 10^6 elements,  execution time will be ~ 8 min
 '''
-def _helper_with_time_delay(df: pd.DataFrame, vol:float, fee: float, time_delay:int) -> Tuple[int,int]:
+def _helper_with_time_delay(df: pd.DataFrame, vol:float, fee: float, time_delay:int, path_to_model:str) -> Tuple[int,int]:
 
     '''
     df - dataframe
     vol - volume for one order
     fee - comission for one order
     time_delay - time delay for order execution in milliseconds
+
+    first case - direction of predicted * direction of chance = 1
+    second case - direction of predicted * direction of chance = -1
+    third case - direction of predicted is 0, but chance direction is not 0
+    fourth case - direction of predicted is not 0, but chance direction is 0
     '''
 
     df = read_data(df)
     df = feature_creation(df)
+    model = lgb.Booster(model_file=path_to_model)
+    df["predicted"] = model.predict(df.drop(["LagTruePrice"], axis=1))
     long_chances, short_chances = 0,0
+    first, second = 0,0
+    third, fourth = 0,0
     for index, row in df.iterrows():
         timestamp = index
         delta = datetime.timedelta(milliseconds=time_delay)  # Create a timedelta representing 40 milliseconds
@@ -55,13 +65,34 @@ def _helper_with_time_delay(df: pd.DataFrame, vol:float, fee: float, time_delay:
             continue
         mid_price_entry = row['TruePrice']
         mid_price_out = df.iloc[first_position]['TruePrice']
-        if (mid_price_out - mid_price_entry) >= (2*vol*mid_price_entry*fee / 100):
-            long_chances += 1
-        elif (mid_price_entry - mid_price_out) >= (2*vol*mid_price_entry*fee / 100):
-            short_chances += 1
-    return long_chances, short_chances
+        mid_price_predicted = row['TruePrice'] + row['predicted']
+        predicted_dir, default_dir = 0, 0
 
-def make_some_analysis(path:str,vol:float, time_delay:int,fee:float=0.1) -> Dict:
+        if (mid_price_predicted - mid_price_entry) >= (fee * (mid_price_entry + mid_price_predicted) / 100):
+            predicted_dir = 1
+        elif (mid_price_entry - mid_price_predicted) >= (fee * (mid_price_entry + mid_price_predicted)  / 100):
+            predicted_dir = -1
+
+        if (mid_price_out - mid_price_entry) >= (fee * (mid_price_entry + mid_price_out)  / 100):
+            default_dir = 1
+            long_chances += 1
+        elif (mid_price_entry - mid_price_out) >= (fee * (mid_price_entry + mid_price_out)  / 100):
+            default_dir = -1
+            short_chances += 1
+
+        if predicted_dir * default_dir == -1:
+            second += 1
+        elif predicted_dir * default_dir == 1:
+            first += 1
+
+        if predicted_dir == 0 and default_dir != 0:
+            third += 1
+        elif predicted_dir != 0 and default_dir == 0:
+            fourth += 1
+
+    return first,second,third,fourth, long_chances, short_chances
+
+def make_some_analysis(path:str,vol:float, time_delay:int, path_to_model:str,fee:float=0.1) -> Dict:
 
     '''
     path - path to a data file
@@ -79,6 +110,10 @@ def make_some_analysis(path:str,vol:float, time_delay:int,fee:float=0.1) -> Dict
         "total": 0,
         "buy_chances": 0,
         "sell_chances": 0,
+        "same_direction": 0,
+        "opposite_direction": 0,
+        "prediction_freeze": 0,
+        "deffault_freeze": 0,
         "time_delay": time_delay,
     }
     for part_number, chunk in enumerate(csv_reader):
@@ -87,19 +122,26 @@ def make_some_analysis(path:str,vol:float, time_delay:int,fee:float=0.1) -> Dict
         elif part_number == total_chunks - 1:
             chunk = chunk.iloc[:-10]
         if time_delay != 0:
-            buy_chances, sell_chances = _helper_with_time_delay(chunk, vol, fee, time_delay)
+            # buy_chances, sell_chances = _helper_with_time_delay(chunk, vol, fee, time_delay, path_to_model)
+            same, opposite, pred_freeze, def_freeze, buy_chances, sell_chances = _helper_with_time_delay(chunk, vol, fee, time_delay, path_to_model)
+            result["same_direction"] += same
+            result["opposite_direction"] += opposite
+            result["prediction_freeze"] += pred_freeze
+            result["deffault_freeze"] += def_freeze
+            result["buy_chances"] += buy_chances
+            result["sell_chances"] += sell_chances
         else:
             buy_chances, sell_chances = _helper(chunk, vol, fee)
+            result["buy_chances"] += buy_chances
+            result["sell_chances"] += sell_chances
         total_number_of_events += len(chunk)
-        result["buy_chances"] += buy_chances
-        result["sell_chances"] += sell_chances
     result["total"] = total_number_of_events
     return result
 
-def _run_part(date:str, snapshot_data_path:str, output_dir_path:str, time_delta:int) -> NoReturn:
+def _run_part(date:str, snapshot_data_path:str, output_dir_path:str, time_delta:int, path_to_model:str) -> NoReturn:
     result = []
     for vol in tqdm(np.arange(0.01, 0.11, 0.01)):
-        result.append(make_some_analysis(snapshot_data_path, vol=vol, time_delay=time_delta))
+        result.append(make_some_analysis(snapshot_data_path, vol=vol, path_to_model=path_to_model, time_delay=time_delta))
     full_output_path = os.path.join(output_dir_path, date+'.json')
     with open(full_output_path, 'w') as file:
         json.dump(result, file)
@@ -121,6 +163,7 @@ def run(args):
     output_dir = args.output_dir_path
     pair_name = args.pair_name
     time_delta = args.time_delta
+    path_to_model = args.model_path
     data_dir_path = os.path.join(data_dir, pair_name.lower())
     if time_delta != 0:
         output_dir_path = os.path.join(output_dir, pair_name.lower()+"_time_delta_" + str(time_delta))
@@ -137,6 +180,7 @@ def run(args):
             snapshot_data_path,
             output_dir_path,
             time_delta,
+            path_to_model
         )))
 
     for job in part_jobs:
@@ -156,6 +200,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir-path", type=str, help="Path to output dir", required=True)
     parser.add_argument("--pair-name", type=str, help="Pair name", required=True)
     parser.add_argument("--time-delta", type=int, help="Define a time delta for analysis", required=True)
+    parser.add_argument("--model-path", type=str, help="Path to model file", required=True)
     args = parser.parse_args()
 
     run(args)
