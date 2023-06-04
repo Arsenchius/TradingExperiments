@@ -5,6 +5,7 @@ import json
 import warnings
 import argparse
 import datetime
+from pathlib import Path
 from multiprocessing import Process
 from typing import NoReturn, Tuple, Dict
 
@@ -13,7 +14,9 @@ import pandas as pd
 import numpy as np
 import lightgbm as lgb
 
-from data.clean import read_data, feature_creation
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(Path(os.path.dirname(SCRIPT_DIR)), "data"))
+from clean import read_data, feature_creation
 
 warnings.filterwarnings("ignore")
 
@@ -92,7 +95,7 @@ def _helper_with_time_delay(df: pd.DataFrame, vol:float, fee: float, time_delay:
 
     return first,second,third,fourth, long_chances, short_chances
 
-def make_some_analysis(path:str,vol:float, time_delay:int, path_to_model:str,fee:float=0.1) -> Dict:
+def make_some_analysis(path:str,vol:float, time_delay:int, path_to_model:str,fee:float=0.04) -> Dict:
 
     '''
     path - path to a data file
@@ -149,6 +152,8 @@ def _run_part(date:str, snapshot_data_path:str, output_dir_path:str, time_delta:
 def _merge_results(output_dir_path:str) -> NoReturn:
     final_result = {}
     for part_path in os.listdir(output_dir_path):
+        if part_path == "overall.json":
+            continue
         full_part_path = os.path.join(output_dir_path, part_path)
         with open(full_part_path, 'r') as file:
             part_result = json.load(file)

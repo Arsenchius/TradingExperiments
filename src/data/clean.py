@@ -257,10 +257,11 @@ def feature_creation(df: pd.DataFrame) -> pd.DataFrame:
     df["MeanRev2"] = (df["TruePrice"] - df["TruePrice"].rolling(20).mean()).fillna(0)
     df["MeanRev1"] = (df["TruePrice"] - df["TruePrice"].rolling(10).mean()).fillna(0)
 
-    df["MidReturn"] = df["TruePrice"].pct_change(1).shift(-1).fillna(0)
-    df["Momentum1"] = df["MidReturn"].shift(1)
-    df["Momentum2"] = df["MidReturn"].shift(2)
-    df["Momentum3"] = df["MidReturn"].shift(3)
+    # df["MidReturn"] = df["TruePrice"].pct_change(1).shift(-1).fillna(0)
+    df["MidReturn"] = df["TruePrice"].pct_change(1).fillna(0)
+    df["Momentum1"] = df["MidReturn"].shift(1).fillna(0)
+    df["Momentum2"] = df["MidReturn"].shift(2).fillna(0)
+    df["Momentum3"] = df["MidReturn"].shift(3).fillna(0)
 
     # additional features
     # thres_arrA = cumAGreaterBtwopfive(
