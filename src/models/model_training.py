@@ -41,7 +41,7 @@ def tuning(path_to_data: str, path_to_params_config: str, log_file_path:str, log
     # Run hyperparameter optimization
     study = optuna.create_study(direction='minimize')
     func = lambda trial: objective(trial, df, features)
-    study.optimize(func, n_trials=50)
+    study.optimize(func, n_trials=500)
 
     # Train final model using best hyperparameters
     best_params = study.best_params
