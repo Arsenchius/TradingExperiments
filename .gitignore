@@ -162,7 +162,11 @@ cython_debug/
 # some additional files
 .notebooks/sandbox.ipynb
 .vscode/
-src/strategy.py
+
+src/strategies/strategy.py
+
 notebooks/TradingAlgorithm.ipynb
+
 reports/analysis_results
+
 notebooks/analysis.ipynb
