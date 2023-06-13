@@ -34,11 +34,72 @@ def _helper(df: pd.DataFrame, vol: float, fee: float) -> Tuple[int,int]:
     sell_chances = len(df[(df["MidPricePrev"] - df["MidPrice"]) > (2 * vol * df["MidPricePrev"] * fee / 100)])
     return buy_chances, sell_chances
 
+
+def _helper_with_time_delay_2(df: pd.DataFrame, vol:float, fee: float, time_delay:int, path_to_model:str) -> Tuple[int,int]:
+
+    '''
+    df - dataframe
+    vol - volume for one order
+    fee - comission for one order
+    time_delay - time delay for order execution in milliseconds
+
+    first case - direction of predicted * direction of chance = 1
+    second case - direction of predicted * direction of chance = -1
+    third case - direction of predicted is 0, but chance direction is not 0
+    fourth case - direction of predicted is not 0, but chance direction is 0
+    '''
+
+    df = read_data(df)
+    df = feature_creation(df)
+    model = lgb.Booster(model_file=path_to_model)
+    df["predicted"] = model.predict(df.drop(["LagTruePrice"], axis=1))
+    long_chances, short_chances = 0,0
+    first, second = 0,0
+    third, fourth = 0,0
+    for index, row in df.iterrows():
+        timestamp = index
+        delta = datetime.timedelta(milliseconds=time_delay)  # Create a timedelta representing 40 milliseconds
+        new_timestamp = timestamp + delta  # Add the timedelta to the timestamp
+        first_position = df.index.searchsorted(new_timestamp) # Time complexity is log(n) for searching
+        if first_position >= len(df):
+            continue
+        mid_price_entry = row['TruePrice']
+        mid_price_predicted = row['TruePrice'] + row['predicted']
+        predicted_dir, default_dir = 0, 0
+        for new_index, new_row in df.iloc[first_position:].iterrows():
+            if new_index >= new_timestamp:
+                mid_price_out = new_row['TruePrice']
+                if (mid_price_out - mid_price_entry) >= (2*vol*mid_price_entry*fee / 100):
+                    long_chances += 1
+                    default_dir = 1
+                    break
+                elif (mid_price_entry - mid_price_out) >= (2*vol*mid_price_entry*fee / 100):
+                    short_chances += 1
+                    default_dir = -1
+                    break
+
+        if (mid_price_predicted - mid_price_entry) >= (fee * (mid_price_entry + mid_price_predicted) / 100):
+            predicted_dir = 1
+        elif (mid_price_entry - mid_price_predicted) >= (fee * (mid_price_entry + mid_price_predicted)  / 100):
+            predicted_dir = -1
+
+        if predicted_dir * default_dir == -1:
+            second += 1
+        elif predicted_dir * default_dir == 1:
+            first += 1
+
+        if predicted_dir == 0 and default_dir != 0:
+            third += 1
+        elif predicted_dir != 0 and default_dir == 0:
+            fourth += 1
+
+    return first,second,third,fourth, long_chances, short_chances
+
 '''
 Time complexity for this execution is O(nlogn)
 For one dataframe with size <= 3 * 10^6 elements,  execution time will be ~ 8 min
 '''
-def _helper_with_time_delay(df: pd.DataFrame, vol:float, fee: float, time_delay:int, path_to_model:str) -> Tuple[int,int]:
+def _helper_with_time_delay_1(df: pd.DataFrame, vol:float, fee: float, time_delay:int, path_to_model:str) -> Tuple[int,int]:
 
     '''
     df - dataframe
@@ -126,7 +187,7 @@ def make_some_analysis(path:str,vol:float, time_delay:int, path_to_model:str,fee
             chunk = chunk.iloc[:-10]
         if time_delay != 0:
             # buy_chances, sell_chances = _helper_with_time_delay(chunk, vol, fee, time_delay, path_to_model)
-            same, opposite, pred_freeze, def_freeze, buy_chances, sell_chances = _helper_with_time_delay(chunk, vol, fee, time_delay, path_to_model)
+            same, opposite, pred_freeze, def_freeze, buy_chances, sell_chances = _helper_with_time_delay_2(chunk, vol, fee, time_delay, path_to_model)
             result["same_direction"] += same
             result["opposite_direction"] += opposite
             result["prediction_freeze"] += pred_freeze
